@@ -235,13 +235,17 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     if df is None or df.empty:
                         validation_errors.append(f"{location}: Unable to read Transfer Detail -> {file}")
                         continue
-                    df['__source_file__'] = file
-                    df['Brand'] = brand
-                    df['Dealer'] = dealer
-                    df['Location'] = location
-                    Transfer_Detail.append(df)
-                continue
+                if df is not None and not df.empty:
+                  df['__source_file__'] = file
+                  df['Brand'] = brand
+                  df['Dealer'] = dealer
+                  df['Location'] = location
+                  Transfer_Detail.append(df)
+                else:
+                    st.warning(f"{location}: Transfer Detail is empty -> {file}")  
+                #continue
 
+      
         # ---------- REPORT GEN ----------
         frames_for_oem = []
 
@@ -553,6 +557,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
