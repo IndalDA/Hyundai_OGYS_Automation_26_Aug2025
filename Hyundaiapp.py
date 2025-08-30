@@ -460,7 +460,7 @@ with st.sidebar:
     )
 
     default_end = datetime.today()
-    default_start = default_end - timedelta(days=59)
+    default_start = default_end - timedelta(days=90)
     start_date = st.date_input("Start Date", value=default_start)
     end_date = st.date_input("End Date", value=default_end)
     period_type = st.selectbox("Select period type", options=list(PERIOD_TYPES.keys()))
@@ -579,6 +579,7 @@ if st.session_state.uploaded_file is not None:
         or st.session_state.period_validation_errors
     ):
         show_validation_issues()
+
 
 
 
