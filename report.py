@@ -14,25 +14,41 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     files = {}     # name -> excel bytes
 
     # ---------- helpers ----------
-    def read_file(file_path, header=None):
-        try:
-            lower = file_path.lower()
-            if lower.endswith(".xlsx"):
-                return pd.read_excel(file_path, header=header, engine="openpyxl")
-            if lower.endswith(".xls"):
-                try:
-                    return pd.read_excel(file_path, header=header, engine="xlrd")
-                except Exception:
-                    return pd.read_excel(file_path, header=header, engine="openpyxl")
-            # CSV / TXT best-effort
-            try:
-                return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                                   on_bad_lines="skip", encoding="utf-8")
-            except UnicodeDecodeError:
-                return pd.read_csv(file_path, header=header, sep=None, engine="python",
-                                   on_bad_lines="skip", encoding="windows-1252")
-        except Exception:
-            return None
+    def read_file(file_path,header=None):
+    
+    if "extracted_files/" in file_path:
+        file_name = file_path.split("extracted_files/", 1)[1]
+    else:
+        file_name = os.path.basename(file_path)
+    try:
+        if file_path.lower().endswith('.xlsx'):
+            return pd.read_excel(file_path, header=header, engine='openpyxl')
+        else:
+            return st.warning(f"File not Excel Workbook and .xlsx extention For : {file_name}")
+    except Exception as e:
+        print(f" read failed for {file_path}: {e}")
+        return None               
+
+                    
+    # def read_file(file_path, header=None):
+    #     try:
+    #         lower = file_path.lower()
+    #         if lower.endswith(".xlsx"):
+    #             return pd.read_excel(file_path, header=header, engine="openpyxl")
+    #         if lower.endswith(".xls"):
+    #             try:
+    #                 return pd.read_excel(file_path, header=header, engine="xlrd")
+    #             except Exception:
+    #                 return pd.read_excel(file_path, header=header, engine="openpyxl")
+    #         # CSV / TXT best-effort
+    #         try:
+    #             return pd.read_csv(file_path, header=header, sep=None, engine="python",
+    #                                on_bad_lines="skip", encoding="utf-8")
+    #         except UnicodeDecodeError:
+    #             return pd.read_csv(file_path, header=header, sep=None, engine="python",
+    #                                on_bad_lines="skip", encoding="windows-1252")
+    #     except Exception:
+    #         return None
 
     def to_num(s):
         return pd.to_numeric(s, errors="coerce").fillna(0)
@@ -557,6 +573,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
