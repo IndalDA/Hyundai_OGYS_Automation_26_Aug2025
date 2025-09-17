@@ -58,32 +58,49 @@ PERIOD_TYPES = {"Day": 1, "Week": 7, "Month": 30, "Quarter": 90, "Year": 365}
 
 # ---------------- File Readers ---------------- #
 def read_file(file_path, header=None):
+    
+    if "extracted_files/" in file_path:
+        file_name = file_path.split("extracted_files/", 1)[1]
+    else:
+        file_name = os.path.basename(file_path)
     try:
-        lower = file_path.lower()
-        if lower.endswith('.xlsx'):
+        if file_path.lower().endswith('.xlsx'):
             return pd.read_excel(file_path, header=header, engine='openpyxl')
-        if lower.endswith('.xls'):
-            try:
-                return pd.read_excel(file_path, header=header, engine='xlrd')
-            except Exception:
-                return pd.read_excel(file_path, header=header, engine='openpyxl')
-        # CSV fallback
-        try:
-            return pd.read_csv(file_path, header=header, encoding='utf-8', sep=None, engine='python', on_bad_lines='skip')
-        except UnicodeDecodeError:
-            return pd.read_csv(file_path, header=header, encoding='windows-1252', sep=None, engine='python', on_bad_lines='skip')
-    except Exception:
+        else:
+            return st.warning(f"File not Excel Workbook and .xlsx extention For : {file_name}")
+    except Exception as e:
+        print(f" read failed for {file_path}: {e}")
         return None
 
-def try_read_as_csv(file_path, header=None):
-    try:
-        return pd.read_csv(file_path, header=header,encoding='utf-8', sep=None, engine='python', on_bad_lines='skip')
-    except UnicodeDecodeError:
-        try:
-            return pd.read_csv(file_path, header=header,encoding='windows-1252', sep=None, engine='python', on_bad_lines='skip')
-        except Exception as e:
-            print(f"CSV read failed for {file_path}: {e}")
-            return None
+
+
+# def read_file(file_path, header=None):
+#     try:
+#         lower = file_path.lower()
+#         if lower.endswith('.xlsx'):
+#             return pd.read_excel(file_path, header=header, engine='openpyxl')
+#         if lower.endswith('.xls'):
+#             try:
+#                 return pd.read_excel(file_path, header=header, engine='xlrd')
+#             except Exception:
+#                 return pd.read_excel(file_path, header=header, engine='openpyxl')
+#         # CSV fallback
+#         try:
+#             return pd.read_csv(file_path, header=header, encoding='utf-8', sep=None, engine='python', on_bad_lines='skip')
+#         except UnicodeDecodeError:
+#             return pd.read_csv(file_path, header=header, encoding='windows-1252', sep=None, engine='python', on_bad_lines='skip')
+#     except Exception:
+#         return None
+
+# def try_read_as_csv(file_path, header=None):
+#     try:
+#         return pd.read_csv(file_path, header=header,encoding='utf-8', sep=None, engine='python', on_bad_lines='skip')
+#     except UnicodeDecodeError:
+#         try:
+#             return pd.read_csv(file_path, header=header,encoding='windows-1252', sep=None, engine='python', on_bad_lines='skip')
+#         except Exception as e:
+#             print(f"CSV read failed for {file_path}: {e}")
+#             return None
 
 # ---------------- Validation Functions (periods) ---------------- #
 def validate_periods(all_locations, start_date, end_date, period_days):
@@ -579,6 +596,7 @@ if st.session_state.uploaded_file is not None:
         or st.session_state.period_validation_errors
     ):
         show_validation_issues()
+
 
 
 
