@@ -15,19 +15,18 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
 
     # ---------- helpers ----------
     def read_file(file_path,header=None):
-    
-    if "extracted_files/" in file_path:
-        file_name = file_path.split("extracted_files/", 1)[1]
-    else:
-        file_name = os.path.basename(file_path)
-    try:
-        if file_path.lower().endswith('.xlsx'):
-            return pd.read_excel(file_path, header=header, engine='openpyxl')
-        else:
-            return st.warning(f"File not Excel Workbook and .xlsx extention For : {file_name}")
-    except Exception as e:
-        print(f" read failed for {file_path}: {e}")
-        return None               
+      if "extracted_files/" in file_path:
+          file_name = file_path.split("extracted_files/", 1)[1]
+      else:
+          file_name = os.path.basename(file_path)
+      try:
+          if file_path.lower().endswith('.xlsx'):
+              return pd.read_excel(file_path, header=header, engine='openpyxl')
+          else:
+              return st.warning(f"File not Excel Workbook and .xlsx extention For : {file_name}")
+      except Exception as e:
+          print(f" read failed for {file_path}: {e}")
+          return None               
 
                     
     # def read_file(file_path, header=None):
@@ -573,6 +572,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
