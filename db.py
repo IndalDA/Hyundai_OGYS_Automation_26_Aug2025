@@ -7,7 +7,7 @@ load_dotenv()
 def create_mssql_connection():
     server = os.getenv("SERVER")
     database = os.getenv("DATABASE")
-    username = "sa"
+    username = "Utkrishtsa"
     password = os.getenv("PASSWORD")
     
     connection_string = f"DRIVER={{ODBC Driver 17 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password}"
@@ -19,5 +19,6 @@ def create_mssql_connection():
     except Exception as e:
         print(f"Error connecting to MSSQL database: {e}")
         return None
+
 
 #create_mssql_connection()        
