@@ -9,6 +9,11 @@ import io
 import warnings
 import time
 from report import process_files
+from new_ui import main as ui_main
+from tbl import connection, cursor, User_event_Log
+from user_event_log import log_app_events
+
+
 
 # ---------------- Page Config ---------------- #
 st.set_page_config(page_title="Hyundai Report Generator", layout="wide", initial_sidebar_state="expanded")
@@ -581,6 +586,23 @@ if (process_btn or st.session_state.continue_processing) and st.session_state.up
             st.session_state.processing_complete = True
             st.session_state.show_reports = True
             st.session_state.continue_processing = False
+            
+            from user_event_log import log_app_events
+            log_app_events(
+                user_id=st.session_state.get("user_id"),
+                start_date=start_date,
+                end_date=end_date,
+                select_categories=select_categories,
+                missing_files=missing_files,
+                validation_log_df=validation_log,
+                success=can_process,
+                period_type=period_type  
+            )
+
+
+
+
+        
         else:
             st.session_state.show_reports = False
 
@@ -596,6 +618,7 @@ if st.session_state.uploaded_file is not None:
         or st.session_state.period_validation_errors
     ):
         show_validation_issues()
+
 
 
 
