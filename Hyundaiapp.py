@@ -469,155 +469,158 @@ def show_reports():
         )
 
 # ---------------- Sidebar ---------------- #
-with st.sidebar:
-    st.header("⚙ Settings")
-    uploaded_file = st.file_uploader("Upload Hyundai ZIP file", type=['zip'])
-    if uploaded_file is not None:
-        st.session_state.uploaded_file = uploaded_file
-
-    select_categories = st.multiselect(
-        "Choose categories",
-        options=['Spares', 'Accessories', 'All'],
-        default=['Spares']
-    )
-
-    default_end = datetime.today()
-    default_start = default_end - timedelta(days=90)
-    start_date = st.date_input("Start Date", value=default_start)
-    end_date = st.date_input("End Date", value=default_end)
-    period_type = st.selectbox("Select period type", options=list(PERIOD_TYPES.keys()))
-    st.session_state.period_type = period_type
-    process_btn = st.button("🚀 Generate Reports", type="primary")
-
-# ---- Reset suppression flag when inputs change ----
-sig_file = st.session_state.uploaded_file.name if st.session_state.uploaded_file else "nofile"
-input_signature = f"{sig_file}|{start_date}|{end_date}|{st.session_state.period_type}|{tuple(sorted(select_categories))}"
-if st.session_state.get("input_signature") != input_signature:
-    st.session_state.input_signature = input_signature
-    st.session_state.suppress_validation_display = False
-    st.session_state.continue_processing = False
-
-# ---------------- Main Processing ---------------- #
-if (process_btn or st.session_state.continue_processing) and st.session_state.uploaded_file is not None:
-    if st.session_state.uploaded_file.size > 200 * 1024 * 1024:
-        st.error("File size exceeds 200MB limit")
-        st.stop()
-
-    temp_dir = tempfile.mkdtemp()
-    extract_path = os.path.join(temp_dir, "extracted_files")
-    os.makedirs(extract_path, exist_ok=True)
-
-    try:
-        with zipfile.ZipFile(st.session_state.uploaded_file, 'r') as zip_ref:
-            zip_ref.extractall(extract_path)
-        st.session_state.extracted_path = extract_path
-        st.success("✅ ZIP file extracted successfully")
-
-        all_locations = []
-        for brand in os.listdir(extract_path):
-            brand_path = os.path.join(extract_path, brand)
-            if not os.path.isdir(brand_path): continue
-            for dealer in os.listdir(brand_path):
-                dealer_path = os.path.join(brand_path, dealer)
-                if not os.path.isdir(dealer_path): continue
-                for location in os.listdir(dealer_path):
-                    location_path = os.path.join(dealer_path, location)
-                    if os.path.isdir(location_path):
-                        all_locations.append((brand, dealer, location, location_path))
-
-        # file presence checks
-        missing_files = []
-        for brand, dealer, location, location_path in all_locations:
-            required = {
-                'bo list': False, 'receiving pending list': False, 'receiving pending detail': False, 'stock': False,
-                'receiving today list': False, 'receiving today detail': False, 'transfer list': False, 'transfer detail': False
-            }
-            for file in os.listdir(location_path):
-                f = file.lower()
-                if f.startswith('bo list'): required['bo list'] = True
-                if f.startswith('receiving today list') or f.startswith('receving today list'): required['receiving today list'] = True
-                if f.startswith('receiving today detail') or f.startswith('receving today detail'): required['receiving today detail'] = True
-                if f.startswith('transfer list'): required['transfer list'] = True
-                if f.startswith('transfer detail'): required['transfer detail'] = True
-                if f.startswith('receiving pending detail') or f.startswith('receving pending detail'): required['receiving pending detail'] = True
-                if f.startswith('receiving pending list') or f.startswith('receving pending list'): required['receiving pending list'] = True
-                if f.startswith('stock'): required['stock'] = True
-
-            for k, v in required.items():
-                if not v:
-                    missing_files.append(f"{brand}/{dealer}/{location} - Missing: {k}")
-
-        period_days = PERIOD_TYPES.get(st.session_state.period_type, 1)
-        period_validation_errors, validation_log = validate_periods(all_locations, start_date, end_date, period_days)
-
-        # HARD BLOCK: cross-sum validations
-        qty_mismatch_errors, qty_mismatch_log = validate_cross_sums(all_locations)
-
-        # save validation state
-        st.session_state.missing_files = missing_files
-        st.session_state.period_validation_errors = period_validation_errors
-        st.session_state.validation_log = validation_log
-        st.session_state.oem_mismatches = pd.DataFrame()
-        st.session_state.Receving_Pending_Detail_mismatches = pd.DataFrame()
-        st.session_state.Transfer_List_mismatches = pd.DataFrame()
-        st.session_state.Receving_Today_Detail_mismatches = pd.DataFrame()
-        st.session_state.Receving_Pending_list_mismatches = pd.DataFrame()
-        st.session_state.qty_mismatch_errors = qty_mismatch_errors
-        st.session_state.qty_mismatch_log = qty_mismatch_log
-
-        # Process only if allowed (hard block ignores Continue Anyway)
-        hard_block = bool(qty_mismatch_errors)
-        can_process = (
-            not hard_block and (
-                st.session_state.continue_processing
-                or (
-                    not missing_files
-                    and not period_validation_errors
+ui_main()
+if st.session_state.get("logged_in", False):
+    with st.sidebar:
+        st.header("⚙ Settings")
+        uploaded_file = st.file_uploader("Upload Hyundai ZIP file", type=['zip'])
+        if uploaded_file is not None:
+            st.session_state.uploaded_file = uploaded_file
+    
+        select_categories = st.multiselect(
+            "Choose categories",
+            options=['Spares', 'Accessories', 'All'],
+            default=['Spares']
+        )
+    
+        default_end = datetime.today()
+        default_start = default_end - timedelta(days=90)
+        start_date = st.date_input("Start Date", value=default_start)
+        end_date = st.date_input("End Date", value=default_end)
+        period_type = st.selectbox("Select period type", options=list(PERIOD_TYPES.keys()))
+        st.session_state.period_type = period_type
+        process_btn = st.button("🚀 Generate Reports", type="primary")
+    
+    # ---- Reset suppression flag when inputs change ----
+    sig_file = st.session_state.uploaded_file.name if st.session_state.uploaded_file else "nofile"
+    input_signature = f"{sig_file}|{start_date}|{end_date}|{st.session_state.period_type}|{tuple(sorted(select_categories))}"
+    if st.session_state.get("input_signature") != input_signature:
+        st.session_state.input_signature = input_signature
+        st.session_state.suppress_validation_display = False
+        st.session_state.continue_processing = False
+    
+    # ---------------- Main Processing ---------------- #
+    if (process_btn or st.session_state.continue_processing) and st.session_state.uploaded_file is not None:
+        if st.session_state.uploaded_file.size > 200 * 1024 * 1024:
+            st.error("File size exceeds 200MB limit")
+            st.stop()
+    
+        temp_dir = tempfile.mkdtemp()
+        extract_path = os.path.join(temp_dir, "extracted_files")
+        os.makedirs(extract_path, exist_ok=True)
+    
+        try:
+            with zipfile.ZipFile(st.session_state.uploaded_file, 'r') as zip_ref:
+                zip_ref.extractall(extract_path)
+            st.session_state.extracted_path = extract_path
+            st.success("✅ ZIP file extracted successfully")
+    
+            all_locations = []
+            for brand in os.listdir(extract_path):
+                brand_path = os.path.join(extract_path, brand)
+                if not os.path.isdir(brand_path): continue
+                for dealer in os.listdir(brand_path):
+                    dealer_path = os.path.join(brand_path, dealer)
+                    if not os.path.isdir(dealer_path): continue
+                    for location in os.listdir(dealer_path):
+                        location_path = os.path.join(dealer_path, location)
+                        if os.path.isdir(location_path):
+                            all_locations.append((brand, dealer, location, location_path))
+    
+            # file presence checks
+            missing_files = []
+            for brand, dealer, location, location_path in all_locations:
+                required = {
+                    'bo list': False, 'receiving pending list': False, 'receiving pending detail': False, 'stock': False,
+                    'receiving today list': False, 'receiving today detail': False, 'transfer list': False, 'transfer detail': False
+                }
+                for file in os.listdir(location_path):
+                    f = file.lower()
+                    if f.startswith('bo list'): required['bo list'] = True
+                    if f.startswith('receiving today list') or f.startswith('receving today list'): required['receiving today list'] = True
+                    if f.startswith('receiving today detail') or f.startswith('receving today detail'): required['receiving today detail'] = True
+                    if f.startswith('transfer list'): required['transfer list'] = True
+                    if f.startswith('transfer detail'): required['transfer detail'] = True
+                    if f.startswith('receiving pending detail') or f.startswith('receving pending detail'): required['receiving pending detail'] = True
+                    if f.startswith('receiving pending list') or f.startswith('receving pending list'): required['receiving pending list'] = True
+                    if f.startswith('stock'): required['stock'] = True
+    
+                for k, v in required.items():
+                    if not v:
+                        missing_files.append(f"{brand}/{dealer}/{location} - Missing: {k}")
+    
+            period_days = PERIOD_TYPES.get(st.session_state.period_type, 1)
+            period_validation_errors, validation_log = validate_periods(all_locations, start_date, end_date, period_days)
+    
+            # HARD BLOCK: cross-sum validations
+            qty_mismatch_errors, qty_mismatch_log = validate_cross_sums(all_locations)
+    
+            # save validation state
+            st.session_state.missing_files = missing_files
+            st.session_state.period_validation_errors = period_validation_errors
+            st.session_state.validation_log = validation_log
+            st.session_state.oem_mismatches = pd.DataFrame()
+            st.session_state.Receving_Pending_Detail_mismatches = pd.DataFrame()
+            st.session_state.Transfer_List_mismatches = pd.DataFrame()
+            st.session_state.Receving_Today_Detail_mismatches = pd.DataFrame()
+            st.session_state.Receving_Pending_list_mismatches = pd.DataFrame()
+            st.session_state.qty_mismatch_errors = qty_mismatch_errors
+            st.session_state.qty_mismatch_log = qty_mismatch_log
+    
+            # Process only if allowed (hard block ignores Continue Anyway)
+            hard_block = bool(qty_mismatch_errors)
+            can_process = (
+                not hard_block and (
+                    st.session_state.continue_processing
+                    or (
+                        not missing_files
+                        and not period_validation_errors
+                    )
                 )
             )
-        )
-
-        if can_process:
-            progress_bar = st.progress(0)
-            status_text = st.empty()
-            with st.spinner("Processing files..."):
-                process_files([], all_locations, start_date, end_date, len(all_locations), progress_bar, status_text, select_categories)
-                time.sleep(0.5)
-            st.session_state.processing_complete = True
-            st.session_state.show_reports = True
-            st.session_state.continue_processing = False
+    
+            if can_process:
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                with st.spinner("Processing files..."):
+                    process_files([], all_locations, start_date, end_date, len(all_locations), progress_bar, status_text, select_categories)
+                    time.sleep(0.5)
+                st.session_state.processing_complete = True
+                st.session_state.show_reports = True
+                st.session_state.continue_processing = False
+                
+                from user_event_log import log_app_events
+                log_app_events(
+                    user_id=st.session_state.get("user_id"),
+                    start_date=start_date,
+                    end_date=end_date,
+                    select_categories=select_categories,
+                    missing_files=missing_files,
+                    validation_log_df=validation_log,
+                    success=can_process,
+                    period_type=period_type  
+                )
+    
+    
+    
+    
             
-            from user_event_log import log_app_events
-            log_app_events(
-                user_id=st.session_state.get("user_id"),
-                start_date=start_date,
-                end_date=end_date,
-                select_categories=select_categories,
-                missing_files=missing_files,
-                validation_log_df=validation_log,
-                success=can_process,
-                period_type=period_type  
-            )
+            else:
+                st.session_state.show_reports = False
+    
+        finally:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+    
+    # ---------------- Output ---------------- #
+    if st.session_state.uploaded_file is not None:
+        # Show blocking/non-blocking validations as appropriate
+        if (
+            st.session_state.qty_mismatch_errors
+            or st.session_state.missing_files
+            or st.session_state.period_validation_errors
+        ):
+            show_validation_issues()
 
-
-
-
-        
-        else:
-            st.session_state.show_reports = False
-
-    finally:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-
-# ---------------- Output ---------------- #
-if st.session_state.uploaded_file is not None:
-    # Show blocking/non-blocking validations as appropriate
-    if (
-        st.session_state.qty_mismatch_errors
-        or st.session_state.missing_files
-        or st.session_state.period_validation_errors
-    ):
-        show_validation_issues()
 
 
 
