@@ -224,6 +224,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                   Receving_Today_Detail.append(df)
                 except:
                   st.write('Recv today details not found')
+                  pass
                 continue
 
             # TRANSFER LIST (header=1)
@@ -575,6 +576,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
