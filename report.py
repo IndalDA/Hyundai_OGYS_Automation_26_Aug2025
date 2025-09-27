@@ -214,13 +214,16 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     if df is None or df.empty:
                         validation_errors.append(f"{location}: Unable to read Receiving Today Detail -> {file}")
                         continue    
-                    df.columns = cols[:df.shape[1]]
-                    df['ORDER DATE'] = normalize_excel_like_date(df['ORDER DATE'])
-                    df['__source_file__'] = file
-                    df['Brand'] = brand
-                    df['Dealer'] = dealer
-                    df['Location'] = location
-                    Receving_Today_Detail.append(df)
+                try:
+                  df.columns = cols[:df.shape[1]]
+                  df['ORDER DATE'] = normalize_excel_like_date(df['ORDER DATE'])
+                  df['__source_file__'] = file
+                  df['Brand'] = brand
+                  df['Dealer'] = dealer
+                  df['Location'] = location
+                  Receving_Today_Detail.append(df)
+                except:
+                  st.write('Recv today details not found')
                 continue
 
             # TRANSFER LIST (header=1)
@@ -572,6 +575,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
