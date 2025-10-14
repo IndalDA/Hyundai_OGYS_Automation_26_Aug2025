@@ -97,7 +97,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
                     bo_df.columns = custom_headers
                     #[:bo_df.shape[1]]
                 except:
-                    bo_df = pd.concat(pd.read_html(file_path, header=1), ignore_index=True)
+                    #bo_df = pd.concat(pd.read_html(file_path, header=1), ignore_index=True)
                     bo_df.columns = custom_headers
                     #[:bo_df.shape[1]]
                 bo_df['PO DATE'] = normalize_excel_like_date(bo_df['PO DATE'])
@@ -590,6 +590,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
