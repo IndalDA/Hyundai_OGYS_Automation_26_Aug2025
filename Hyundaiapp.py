@@ -9,9 +9,9 @@ import io
 import warnings
 import time
 from report import process_files
-from new_ui import main as ui_main
-from tbl import connection, cursor, User_event_Log
-from user_event_log import log_app_events
+#from new_ui import main as ui_main
+#from tbl import connection, cursor, User_event_Log
+#from user_event_log import log_app_events
 
 
 
@@ -620,6 +620,7 @@ if st.session_state.get("logged_in", False):
             or st.session_state.period_validation_errors
         ):
             show_validation_issues()
+
 
 
 
