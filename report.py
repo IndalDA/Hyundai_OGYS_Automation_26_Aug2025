@@ -86,9 +86,10 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
             # BO LIST (header row is the 2nd row -> header=1)
             if fl.startswith("bo list"):
                 custom_headers = [
-                    'ORDER NO', 'LINE', 'PART NO_ORDER', 'PART NO_CURRENT', 'PART NAME',
+                    'ORDER NO', 'DLR_ORD_NO','LINE', 'PART NO_ORDER', 'PART NO_CURRENT', 'PART NAME',
                     'PARTSOURCE', 'QUANTITY_ORDER', 'QUANTITY_CURRENT', 'B/O', 'PO DATE',
-                    'PDC', 'ETA', 'MSG', 'PROCESSING_ALLOCATION', 'PROCESSING_ON-PICK',
+                    'PDC', 'ETA', 'SHIPPED ETA','MSG','QUERY_DETAIL_NO',	'QUERY_DETAIL_SUBJECT',	'QUERY_DETAIL_ANSWER',	'QUERY_DETAIL_STTS',
+                    'PROCESSING_ALLOCATION', 'PROCESSING_ON-PICK',
                     'PROCESSING_ON-PACK', 'PROCESSING_PACKED', 'PROCESSING_INVOICE',
                     'PROCESSING_SHIPPEO', 'LOST QTY', 'ELAP'
                 ]
@@ -590,6 +591,7 @@ def process_files(validation_errors, all_locations, start_date, end_date, total_
     else:
         st.info("ℹ No reports available to download.")
         st.warning("Pls check Folder Structure")  # (fix typo from st.warring -> st.warning)
+
 
 
 
